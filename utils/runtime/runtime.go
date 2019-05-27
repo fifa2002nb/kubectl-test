@@ -2,45 +2,12 @@ package runtime
 
 import (
 	"context"
-	dockerapi "github.com/docker/docker/client"
+	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/remotecommand"
-	"time"
 )
-
-const (
-	DockerTimeout  = 30 * time.Second
-	DockerEndpoint = "unix:///var/run/docker.sock"
-)
-
-type kubeDockerClient struct {
-	timeout time.Duration
-	client  *dockerapi.Client
-}
-
-func NewKubeDockerClient() (*kubeDockerClient, error) {
-	var err error
-	kdc := &kubeDockerClient{timeout: DockerTimeout}
-	kdc.client, err = dockerapi.NewClient(DockerEndpoint, "", nil, nil)
-	if nil != err {
-		return nil, err
-	}
-	return kdc, nil
-}
-
-func (d *kubeDockerClient) getCancelableContext() (context.Context, context.CancelFunc) {
-	return context.WithCancel(context.Background())
-}
-
-func (d *kubeDockerClient) PullImage(image string) {
-}
-
-func (d *kubeDockerClient) StartContainer()    {}
-func (d *kubeDockerClient) CreateContainer()   {}
-func (d *kubeDockerClient) CleanContainer()    {}
-func (d *kubeDockerClient) RmContainer()       {}
-func (d *kubeDockerClient) AttachToContainer() {}
 
 type streamingRuntime struct {
 	client       *kubeDockerClient
@@ -55,6 +22,27 @@ func NewStreamRuntime(image string, commandSlice []string, cxt context.Context, 
 	s := &streamingRuntime{client: client, image: image, commandSlice: commandSlice, cxt: cxt, cancel: cancel}
 	return s, err
 }
-func (s *streamingRuntime) AttachContainer(name string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
+func (s *streamingRuntime) AttachContainer(name string, uid types.UID, containerId string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
+	log.Infof("name:%v, uid:%v, containerId:%v, image:%v, commandSlice:%v", name, uid, containerId, s.image, s.commandSlice)
+	stdout.Write([]byte(fmt.Sprintf("pulling image %s... \n\r", s.image)))
+	err := s.client.PullImage(s.image, stdout)
+	if nil != err {
+		return err
+	}
+	stdout.Write([]byte("starting test container...\n\r"))
+	res, err := s.client.CreateContainer(s.image, s.commandSlice, containerId)
+	if nil != err {
+		return err
+	}
+	err = s.client.StartContainer(res.ID)
+	if nil != err {
+		return err
+	}
+	defer s.client.CleanContainer(containerId)
+	stdout.Write([]byte("container created, open tty...\n\r"))
+	err = s.client.AttachToContainer(containerId, stdin, stdout, stderr, tty, resize)
+	if nil != err {
+		return err
+	}
 	return nil
 }
