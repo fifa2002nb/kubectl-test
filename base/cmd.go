@@ -118,7 +118,8 @@ func Cmd(c *cli.Context) {
 		params.Add("containerid", containerId)
 		bytes, _ := json.Marshal([]string{options.Command})
 		params.Add("command", string(bytes))
-		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, string(bytes))
+		uri.RawQuery = params.Encode()
+		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, options.Command)
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
 
