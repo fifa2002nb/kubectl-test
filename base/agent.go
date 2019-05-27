@@ -60,7 +60,7 @@ func (t *TestServer) serveTest(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "cannot parse command", 400)
 		return
 	}
-	log.Infof("%v, %v, %v", dockerContainerId, image, commandSlice)
+	log.Infof("containerid:%v, image:%v, commandSlice:%v", dockerContainerId, image, commandSlice)
 	streamOpts := &remotecommandserver.Options{
 		Stdin:  true,
 		Stdout: true,
