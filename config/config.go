@@ -7,13 +7,21 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/widuu/goini"
 	"strconv"
+	"time"
 )
 
 // 配置项
 type Options struct {
-	// for common
-	Port      int
-	StoreFile string
+	// for agent
+	Port                  int
+	StreamIdleTimeout     time.Duration
+	StreamCreationTimeout time.Duration
+
+	// for cmd
+	Namespace string
+	PodName   string
+	Image     string
+	Command   string
 }
 
 // 解析配置文件
@@ -28,11 +36,29 @@ func ParseConf(c *cli.Context) (*Options, error) {
 			conf = goini.SetConfig(c.String("C"))
 		}
 		// main configure
-		port := conf.GetValue("main", "port")
+		port := conf.GetValue("agent", "port")
 		if options.Port, err = strconv.Atoi(port); nil != err {
 			log.Errorf("%v", err)
 			options.Port = 8899
 		}
+		options.Namespace = conf.GetValue("cmd", "namespace")
+		if "" == options.Namespace {
+			options.Namespace = "hadoop"
+		}
+		options.PodName = conf.GetValue("cmd", "podname")
+		if "" == options.PodName {
+			options.PodName = "hdfs-namenode-0"
+		}
+		options.Image = conf.GetValue("cmd", "image")
+		if "" == options.Image {
+			options.Image = "nicolaka/netshoot:latest"
+		}
+		options.Command = conf.GetValue("cmd", "command")
+		if "" == options.Command {
+			options.Command = "bash"
+		}
+		options.StreamIdleTimeout = 30 * time.Second
+		options.StreamCreationTimeout = 15 * time.Second
 		return options, nil
 	} else {
 		return nil, errors.New(fmt.Sprintf("configure is required to run a job. See '%s start --help'.", c.App.Name))
