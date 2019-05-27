@@ -38,7 +38,7 @@ func (t *TestServer) Start() {
 }
 
 func (t *TestServer) serveTest(w http.ResponseWriter, req *http.Request) {
-	containerId := req.FormValue("container")
+	containerId := req.FormValue("containerid")
 	if len(containerId) < 1 {
 		http.Error(w, "target container id must be provided", 400)
 		return

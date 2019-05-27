@@ -98,7 +98,7 @@ func Cmd(c *cli.Context) {
 	containerName := pod.Spec.Containers[0].Name
 	containerId, err := getContainerIdByName(pod, containerName)
 	if "" == containerId {
-		log.Fatal("%v, %v, containerId is nil.", pod, containerName)
+		log.Fatal(fmt.Sprintf("%v, %v, containerId is nil.", pod, containerName))
 		os.Exit(1)
 	}
 	t := SetupTTY()
@@ -115,14 +115,14 @@ func Cmd(c *cli.Context) {
 		uri.Path = fmt.Sprintf("/v1/api/test")
 		params := url.Values{}
 		params.Add("image", options.Image)
-		params.Add("containerId", containerId)
+		params.Add("containerid", containerId)
 		bytes, _ := json.Marshal([]string{options.Command})
 		params.Add("command", string(bytes))
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
 
 	if err := t.Safe(fn); err != nil {
-		log.Fatal("%v", err)
+		log.Fatalf("%v", err)
 		os.Exit(1)
 	}
 }
