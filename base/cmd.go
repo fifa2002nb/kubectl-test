@@ -70,7 +70,7 @@ func Cmd(c *cli.Context) {
 		log.Fatal(err.Error())
 		os.Exit(1)
 	} else {
-		log.Infof("%v", options)
+		log.Infof("options:%v", options)
 	}
 	//streams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
 	configFlag := &genericclioptions.ConfigFlags{}
@@ -118,6 +118,7 @@ func Cmd(c *cli.Context) {
 		params.Add("containerid", containerId)
 		bytes, _ := json.Marshal([]string{options.Command})
 		params.Add("command", string(bytes))
+		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, string(bytes))
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
 
