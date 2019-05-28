@@ -9,6 +9,7 @@ import (
 	"io"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -36,7 +37,7 @@ func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNames
 	agentVolumeName := "docker"
 	agentMountName := "/var/run/docker.sock"
 	agentPort := port
-	agentPod = op.BuildPodWithParameters(agentPodkind, agentApiVersion, agentPodName, agentPodNamespace, agentNodeName, agentProbePath, agentVolumeName, agentMountName, agentPort)
+	agentPod = op.BuildPodWithParameters(agentPodkind, agentApiVersion, agentPodName, agentPodNamespace, agentNodeName, agentImage, agentProbePath, agentVolumeName, agentMountName, agentPort)
 	agentPod, err = op.LaunchPod(agentPod)
 	if err != nil {
 		return nil, err
