@@ -57,7 +57,7 @@ func ParseConf(c *cli.Context) (*Options, error) {
 		if "" == options.Command {
 			options.Command = "bash"
 		}
-		options.StreamIdleTimeout = 30 * time.Second
+		options.StreamIdleTimeout = 10 * time.Minute
 		options.StreamCreationTimeout = 15 * time.Second
 		return options, nil
 	} else {

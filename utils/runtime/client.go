@@ -153,7 +153,7 @@ func (d *kubeDockerClient) AttachToContainer(containerId string, stdin io.Reader
 		ErrorStream:  stderr,
 		RawTerminal:  tty,
 	}
-	ctx, cancel := d.getCancelableContext()
+	ctx, cancel := d.getTimeoutContext()
 	defer cancel()
 	resp, err := d.client.ContainerAttach(ctx, containerId, opts)
 	if err != nil {
