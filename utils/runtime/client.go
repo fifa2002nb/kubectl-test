@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	dockertypes "github.com/docker/docker/api/types"
@@ -52,9 +53,31 @@ func (d *kubeDockerClient) PullImage(image string, stdout io.WriteCloser, cxt co
 		return err
 	}
 	defer out.Close()
-	body, err := ioutil.ReadAll(out)
-	fmt.Println(string(body))
-	//jsonmessage.DisplayJSONMessagesStream(out, stdout, 1, true, nil)
+
+	decoder := json.NewDecoder(out)
+	type Event struct {
+		Status         string `json:"status"`
+		Error          string `json:"error"`
+		Progress       string `json:"progress"`
+		ProgressDetail struct {
+			Current int `json:"current"`
+			Total   int `json:"total"`
+		} `json:"progressDetail"`
+	}
+	var event *Event
+	for {
+		if err := decoder.Decode(&event); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+		if nil == stdout {
+			log.Infof("EVENT:%v\n", event)
+		} else {
+			stdout.Write([]byte(fmt.Sprintf("EVENT:%v\n", event)))
+		}
+	}
 	return err
 }
 
