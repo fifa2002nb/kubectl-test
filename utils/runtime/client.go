@@ -48,6 +48,7 @@ func (d *kubeDockerClient) getTimeoutContext() (context.Context, context.CancelF
 }
 
 func (d *kubeDockerClient) PullImage(image string, stdout io.WriteCloser, cxt context.Context) error {
+	log.Infof("pulling image:%s", image)
 	out, err := d.client.ImagePull(cxt, image, dockertypes.ImagePullOptions{})
 	if nil != err {
 		return err
@@ -73,9 +74,9 @@ func (d *kubeDockerClient) PullImage(image string, stdout io.WriteCloser, cxt co
 			return err
 		}
 		if nil == stdout {
-			log.Infof("EVENT:%v\n", event)
+			log.Infof("EVENT:%v", event)
 		} else {
-			stdout.Write([]byte(fmt.Sprintf("EVENT:%v\n", event)))
+			stdout.Write([]byte(fmt.Sprintf("EVENT:%v", event)))
 		}
 	}
 	return err
