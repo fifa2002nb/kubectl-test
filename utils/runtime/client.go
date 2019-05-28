@@ -75,7 +75,7 @@ func (d *kubeDockerClient) PullImage(image string, stdout io.WriteCloser, cxt co
 		if nil == stdout {
 			log.Infof("EVENT:%v", event)
 		} else {
-			stdout.Write([]byte(fmt.Sprintf("EVENT:%v\n", event)))
+			stdout.Write([]byte(fmt.Sprintf("EVENT:%v\n\r", event)))
 		}
 	}
 	return err

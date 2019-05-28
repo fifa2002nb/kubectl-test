@@ -109,7 +109,8 @@ func Cmd(c *cli.Context) {
 		if nil != err {
 			return err
 		}
-		uri.Path = fmt.Sprintf("/v1/api/test")
+		//uri.Path = fmt.Sprintf("/v1/api/test")
+		uri.Path = fmt.Sprintf("/api/v1/debug")
 		params := url.Values{}
 		params.Add("image", options.Image)
 		params.Add("containerid", containerId)
