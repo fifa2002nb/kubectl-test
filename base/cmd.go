@@ -32,7 +32,7 @@ func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNames
 	agentPodName := "test"
 	agentPodNamespace := podNamespace
 	agentNodeName := nodename
-	agentImage := "fifa2002/kubectltest:latest"
+	agentImage := "fifa2002nb/kubectltest:latest"
 	agentProbePath := "/health"
 	agentVolumeName := "docker"
 	agentMountName := "/var/run/docker.sock"
