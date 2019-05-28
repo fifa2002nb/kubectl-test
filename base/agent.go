@@ -67,9 +67,7 @@ func (t *TestServer) serveTest(w http.ResponseWriter, req *http.Request) {
 		Stderr: false,
 		TTY:    true,
 	}
-	cxt, cancel := context.WithCancel(req.Context())
-	defer cancel()
-	streamingRuntime, err := runtime.NewStreamRuntime(image, commandSlice, cxt, cancel)
+	streamingRuntime, err := runtime.NewStreamRuntime(image, commandSlice)
 	if nil != err {
 		http.Error(w, fmt.Sprintf("streaming runtime err:%v", err), 400)
 		return

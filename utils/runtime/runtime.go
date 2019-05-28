@@ -13,13 +13,11 @@ type streamingRuntime struct {
 	client       *kubeDockerClient
 	image        string
 	commandSlice []string
-	cxt          context.Context
-	cancel       context.CancelFunc
 }
 
-func NewStreamRuntime(image string, commandSlice []string, cxt context.Context, cancel context.CancelFunc) (*streamingRuntime, error) {
+func NewStreamRuntime(image string, commandSlice []string) (*streamingRuntime, error) {
 	client, err := NewKubeDockerClient()
-	s := &streamingRuntime{client: client, image: image, commandSlice: commandSlice, cxt: cxt, cancel: cancel}
+	s := &streamingRuntime{client: client, image: image, commandSlice: commandSlice}
 	return s, err
 }
 func (s *streamingRuntime) AttachContainer(name string, uid types.UID, containerId string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
