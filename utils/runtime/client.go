@@ -52,8 +52,10 @@ func (d *kubeDockerClient) PullImage(image string, stdout io.WriteCloser, cxt co
 		return err
 	}
 	defer out.Close()
+	body, err := ioutil.ReadAll(out)
+	fmt.Println(string(body))
 	//jsonmessage.DisplayJSONMessagesStream(out, stdout, 1, true, nil)
-	return nil
+	return err
 }
 
 func (d *kubeDockerClient) StartContainer(id string) error {
