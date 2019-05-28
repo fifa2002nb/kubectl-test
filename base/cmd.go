@@ -114,6 +114,7 @@ func Cmd(c *cli.Context) {
 		params := url.Values{}
 		params.Add("image", options.Image)
 		params.Add("containerid", containerId)
+		params.Add("container", containerId)
 		bytes, _ := json.Marshal([]string{options.Command})
 		params.Add("command", string(bytes))
 		uri.RawQuery = params.Encode()
