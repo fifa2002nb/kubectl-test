@@ -47,12 +47,14 @@ func (d *kubeDockerClient) getTimeoutContext() (context.Context, context.CancelF
 }
 
 func (d *kubeDockerClient) PullImage(image string, stdout io.WriteCloser, cxt context.Context) error {
-	resp, err := d.client.ImagePull(cxt, image, dockertypes.ImagePullOptions{})
+	out, err := d.client.ImagePull(cxt, image, dockertypes.ImagePullOptions{})
 	if nil != err {
 		return err
 	}
-	defer resp.Close()
-	//jsonmessage.DisplayJSONMessagesStream(resp, stdout, 1, true, nil)
+	defer out.Close()
+	body, err := ioutil.ReadAll(out)
+	stdout.Write(body)
+	//jsonmessage.DisplayJSONMessagesStream(out, stdout, 1, true, nil)
 	return nil
 }
 
