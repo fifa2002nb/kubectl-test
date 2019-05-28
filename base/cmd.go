@@ -11,13 +11,36 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
+	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/kubernetes/pkg/util/interrupt"
 	"kubectl-test/config"
+	"kubectl-test/utils/podoper"
 	"kubectl-test/utils/term"
 	"net/url"
 	"os"
 )
+
+func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNamespace string, port int) (*corev1.Pod, error) {
+	var agentPod *corev1.Pod
+	op := podoper.NewPodOper(client)
+	agentPodkind := "Pod"
+	agentApiVersion := "v1"
+	agentPodName = "test"
+	agentNodeName = nodename
+	agentImage := "fifa2002/kubectltest:latest"
+	agentProbePath := "/health"
+	agentVolumeName := "docker"
+	agentMountName := "/var/run/docker.sock"
+	agentPort := port
+	agentPod = op.BuildPodWithParameters(agentPodkind, agentApiVersion, agentPodName, agentNodeName, agentProbePath, agentVolumeName, agentMountName, agentPort)
+	agentPod, err = op.LaunchPod(agentPod)
+	if err != nil {
+		return nil, err
+	}
+	return agentPod, nil
+}
 
 func SetupTTY() term.TTY {
 	t := term.TTY{}
@@ -98,6 +121,16 @@ func Cmd(c *cli.Context) {
 		log.Fatal(fmt.Sprintf("%v, %v, containerId is nil.", pod, containerName))
 		os.Exit(1)
 	}
+
+	var agentPod *corev1.Pod = nil
+	if options.Agentless {
+		agentPod, err := LaunchAgentPod(clientset.CoreV1(), pod.Spec.NodeName, options.Namespace, options.Port)
+		if nil != err {
+			log.Fatalf("%v, %v", agentPod, err)
+			os.Exit(1)
+		}
+	}
+
 	t := SetupTTY()
 	var sizeQueue remotecommand.TerminalSizeQueue
 	if t.Raw {
@@ -110,19 +143,27 @@ func Cmd(c *cli.Context) {
 			return err
 		}
 		uri.Path = fmt.Sprintf("/v1/api/test")
-		//uri.Path = fmt.Sprintf("/api/v1/debug")
 		params := url.Values{}
 		params.Add("image", options.Image)
 		params.Add("containerid", containerId)
-		//params.Add("container", containerId)
 		bytes, _ := json.Marshal([]string{options.Command})
 		params.Add("command", string(bytes))
 		uri.RawQuery = params.Encode()
 		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, options.Command)
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
-
-	if err := t.Safe(fn); err != nil {
+	fnWithCleanUp := func() error {
+		return interrupt.Chain(nil, func() {
+			if options.Agentless && nil != agentPod {
+				log.Infof("Start deleting agent pod %s", agentPod.Name)
+				err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
+				if nil != err {
+					log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+				}
+			}
+		}).Run(fn)
+	}
+	if err := t.Safe(fnWithCleanUp); err != nil {
 		log.Fatalf("%v", err)
 		os.Exit(1)
 	}
