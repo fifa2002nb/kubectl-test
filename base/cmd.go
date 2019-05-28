@@ -45,6 +45,21 @@ func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNames
 	return agentPod, nil
 }
 
+func BuildAgentUri(hostIP string, port string, image, containerid, command string) (*url.URL, error) {
+	uri, err := url.Parse(fmt.Sprintf("http://%s:%d", hostIP, options.Port))
+	if nil != err {
+		return nil, err
+	}
+	uri.Path = fmt.Sprintf("/v1/api/test")
+	params := url.Values{}
+	params.Add("image", options.Image)
+	params.Add("containerid", containerId)
+	bytes, _ := json.Marshal([]string{options.Command})
+	params.Add("command", string(bytes))
+	uri.RawQuery = params.Encode()
+	return uri, err
+}
+
 func SetupTTY() term.TTY {
 	t := term.TTY{}
 	t.Raw = true
@@ -140,21 +155,13 @@ func Cmd(c *cli.Context) {
 		sizeQueue = t.MonitorSize(t.GetSize())
 	}
 	var ErrOut io.Writer = nil
+
 	fn := func() error {
-		uri, err := url.Parse(fmt.Sprintf("http://%s:%d", hostIP, options.Port))
-		if nil != err {
-			return err
-		}
-		uri.Path = fmt.Sprintf("/v1/api/test")
-		params := url.Values{}
-		params.Add("image", options.Image)
-		params.Add("containerid", containerId)
-		bytes, _ := json.Marshal([]string{options.Command})
-		params.Add("command", string(bytes))
-		uri.RawQuery = params.Encode()
+		uri := BuildAgentUri(hostIP, options.Port, options.Image, containerId, options.Command)
 		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, options.Command)
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
+
 	fnWithCleanUp := func() error {
 		return interrupt.Chain(nil, func() {
 			if options.Agentless && nil != agentPod {
@@ -166,6 +173,7 @@ func Cmd(c *cli.Context) {
 			}
 		}).Run(fn)
 	}
+
 	if err := t.Safe(fnWithCleanUp); err != nil {
 		log.Fatalf("%v", err)
 		os.Exit(1)
