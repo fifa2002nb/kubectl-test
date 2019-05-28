@@ -73,6 +73,13 @@ func main() {
 			Flags:     []cli.Flag{base.FlConf},
 			Action:    base.Cmd,
 		},
+		{
+			Name:      "native",
+			ShortName: "n",
+			Usage:     "native",
+			Flags:     []cli.Flag{base.FlConf},
+			Action:    base.Native,
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
