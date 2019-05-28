@@ -123,6 +123,11 @@ func (d *kubeDockerClient) CleanContainer(id string) error {
 	case <-statusCh:
 		rmErr = d.RemoveContainer(id, false)
 	}
+	if nil == rmErr {
+		log.Infof("session end, debug container %s removed", id)
+	} else {
+		log.Errorf("remove id:%s err:%v", id, rmErr)
+	}
 	return rmErr
 }
 
