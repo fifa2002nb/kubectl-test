@@ -14,7 +14,7 @@ import (
 	druntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubernetes/pkg/kubelet/dockershim/libdocker"
-	"kubectl-test/utils/jsonmessage"
+	//"kubectl-test/utils/jsonmessage"
 	"time"
 )
 

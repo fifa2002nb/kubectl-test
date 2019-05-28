@@ -7,7 +7,7 @@ import (
 	"github.com/codegangsta/cli"
 	"kubectl-test/config"
 	//"kubectl-test/config/routes"
-	"context"
+	//"context"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 	remotecommandserver "k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
 	"kubectl-test/utils/runtime"
