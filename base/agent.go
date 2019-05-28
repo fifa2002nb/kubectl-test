@@ -7,7 +7,7 @@ import (
 	"github.com/codegangsta/cli"
 	"kubectl-test/config"
 	//"kubectl-test/config/routes"
-	//"context"
+	"context"
 	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
 	remotecommandserver "k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
 	"kubectl-test/utils/runtime"
@@ -67,7 +67,9 @@ func (t *TestServer) serveTest(w http.ResponseWriter, req *http.Request) {
 		Stderr: false,
 		TTY:    true,
 	}
-	streamingRuntime, err := runtime.NewStreamRuntime(image, commandSlice)
+	cxt, cancel := context.WithCancel(req.Context())
+	defer cancel()
+	streamingRuntime, err := runtime.NewStreamRuntime(image, commandSlice, cxt, cancel)
 	if nil != err {
 		http.Error(w, fmt.Sprintf("streaming runtime err:%v", err), 400)
 		return

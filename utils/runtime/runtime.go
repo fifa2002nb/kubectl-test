@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	//"context"
+	"context"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"io"
@@ -13,17 +13,19 @@ type streamingRuntime struct {
 	client       *kubeDockerClient
 	image        string
 	commandSlice []string
+	cxt          context.Context
+	cancel       context.CancelFunc
 }
 
-func NewStreamRuntime(image string, commandSlice []string) (*streamingRuntime, error) {
+func NewStreamRuntime(image string, commandSlice []string, cxt context.Context, cancel context.CancelFunc) (*streamingRuntime, error) {
 	client, err := NewKubeDockerClient()
-	s := &streamingRuntime{client: client, image: image, commandSlice: commandSlice}
+	s := &streamingRuntime{client: client, image: image, commandSlice: commandSlice, cxt: cxt, cancel: cancel}
 	return s, err
 }
 func (s *streamingRuntime) AttachContainer(name string, uid types.UID, containerId string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
 	log.Infof("name:%v, uid:%v, containerId:%v, image:%v, commandSlice:%v", name, uid, containerId, s.image, s.commandSlice)
 	stdout.Write([]byte(fmt.Sprintf("pulling image %s... \n\r", s.image)))
-	err := s.client.PullImage(s.image, stdout)
+	err := s.client.PullImage(s.image, stdout, s.cxt)
 	if nil != err {
 		return err
 	}
