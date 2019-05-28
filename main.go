@@ -13,11 +13,11 @@ import (
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{
-		DisableColors:   false,
+		DisableColors:   true,
 		FullTimestamp:   true,
 		TimestampFormat: "2006-01-02 15:04:05.000000",
 	})
-	runtime.GOMAXPROCS(40)
+	runtime.GOMAXPROCS(2)
 }
 
 func main() {
