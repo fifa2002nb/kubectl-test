@@ -143,9 +143,9 @@ func (d *kubeDockerClient) AttachToContainer(containerId string, stdin io.Reader
 	})
 	opts := dockertypes.ContainerAttachOptions{
 		Stream: true,
-		Stdin:  true,
-		Stdout: true,
-		Stderr: false,
+		Stdin:  stdin != nil,
+		Stdout: stdout != nil,
+		Stderr: stderr != nil,
 	}
 	sopts := libdocker.StreamOptions{
 		InputStream:  stdin,
@@ -192,7 +192,7 @@ func (d *kubeDockerClient) holdHijackedConnection(tty bool, inputStream io.Reade
 }
 
 func (d *kubeDockerClient) ResizeContainerTTY(id string, height, width uint) error {
-	ctx, cancel := d.getCancelableContext()
+	ctx, cancel := d.getTimeoutContext()
 	defer cancel()
 	return d.client.ContainerResize(ctx, id, dockertypes.ResizeOptions{
 		Height: height,

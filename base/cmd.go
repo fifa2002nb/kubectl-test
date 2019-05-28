@@ -20,10 +20,7 @@ import (
 )
 
 func SetupTTY() term.TTY {
-	t := term.TTY{
-		Parent: nil,
-		Out:    nil,
-	}
+	t := term.TTY{}
 	t.Raw = true
 	stdin, stdout, _ := dockerterm.StdStreams()
 	t.In = stdin
