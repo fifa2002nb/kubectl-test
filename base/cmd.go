@@ -24,17 +24,19 @@ import (
 
 func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNamespace string, port int) (*corev1.Pod, error) {
 	var agentPod *corev1.Pod
+	var err error
 	op := podoper.NewPodOper(client)
 	agentPodkind := "Pod"
 	agentApiVersion := "v1"
-	agentPodName = "test"
-	agentNodeName = nodename
+	agentPodName := "test"
+	agentPodNamespace := podNamespace
+	agentNodeName := nodename
 	agentImage := "fifa2002/kubectltest:latest"
 	agentProbePath := "/health"
 	agentVolumeName := "docker"
 	agentMountName := "/var/run/docker.sock"
 	agentPort := port
-	agentPod = op.BuildPodWithParameters(agentPodkind, agentApiVersion, agentPodName, agentNodeName, agentProbePath, agentVolumeName, agentMountName, agentPort)
+	agentPod = op.BuildPodWithParameters(agentPodkind, agentApiVersion, agentPodName, agentPodNamespace, agentNodeName, agentProbePath, agentVolumeName, agentMountName, agentPort)
 	agentPod, err = op.LaunchPod(agentPod)
 	if err != nil {
 		return nil, err
