@@ -45,7 +45,7 @@ func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNames
 	return agentPod, nil
 }
 
-func BuildAgentUri(hostIP string, port string, image, containerid, command string) (*url.URL, error) {
+func BuildAgentUri(hostIP string, port int, image, containerid, command string) (*url.URL, error) {
 	uri, err := url.Parse(fmt.Sprintf("http://%s:%d", hostIP, port))
 	if nil != err {
 		return nil, err
