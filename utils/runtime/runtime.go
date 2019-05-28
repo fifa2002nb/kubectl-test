@@ -24,11 +24,13 @@ func NewStreamRuntime(image string, commandSlice []string, cxt context.Context, 
 }
 func (s *streamingRuntime) AttachContainer(name string, uid types.UID, containerId string, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan remotecommand.TerminalSize) error {
 	log.Infof("name:%v, uid:%v, containerId:%v, image:%v, commandSlice:%v", name, uid, containerId, s.image, s.commandSlice)
+
 	stdout.Write([]byte(fmt.Sprintf("pulling image %s... \n\r", s.image)))
 	err := s.client.PullImage(s.image, stdout, s.cxt)
 	if nil != err {
 		return err
 	}
+
 	stdout.Write([]byte("starting test container...\n\r"))
 	res, err := s.client.CreateContainer(s.image, s.commandSlice, containerId)
 	if nil != err {
@@ -38,9 +40,11 @@ func (s *streamingRuntime) AttachContainer(name string, uid types.UID, container
 	if nil != err {
 		return err
 	}
-	defer s.client.CleanContainer(containerId)
+
+	defer s.client.CleanContainer(res.ID)
+
 	stdout.Write([]byte("container created, open tty...\n\r"))
-	err = s.client.AttachToContainer(containerId, stdin, stdout, stderr, tty, resize)
+	err = s.client.AttachToContainer(res.ID, stdin, stdout, stderr, tty, resize)
 	if nil != err {
 		return err
 	}

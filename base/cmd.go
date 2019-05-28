@@ -109,12 +109,12 @@ func Cmd(c *cli.Context) {
 		if nil != err {
 			return err
 		}
-		//uri.Path = fmt.Sprintf("/v1/api/test")
-		uri.Path = fmt.Sprintf("/api/v1/debug")
+		uri.Path = fmt.Sprintf("/v1/api/test")
+		//uri.Path = fmt.Sprintf("/api/v1/debug")
 		params := url.Values{}
 		params.Add("image", options.Image)
 		params.Add("containerid", containerId)
-		params.Add("container", containerId)
+		//params.Add("container", containerId)
 		bytes, _ := json.Marshal([]string{options.Command})
 		params.Add("command", string(bytes))
 		uri.RawQuery = params.Encode()
