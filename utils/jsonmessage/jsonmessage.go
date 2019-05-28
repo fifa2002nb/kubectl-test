@@ -1,3 +1,4 @@
+// copied from docker/docker/pkg/jsonmessage/jsonmesage.go, fix the row align
 package jsonmessage
 
 import (
@@ -8,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Nvveen/Gotty"
+	gotty "github.com/Nvveen/Gotty"
 	"github.com/docker/docker/pkg/term"
-	"github.com/docker/go-units"
+	units "github.com/docker/go-units"
 )
 
 // RFC3339NanoFixed is time.RFC3339Nano with nanoseconds padded using zeros to
@@ -40,17 +41,21 @@ type JSONProgress struct {
 	// If true, don't show xB/yB
 	HideCounts bool   `json:"hidecounts,omitempty"`
 	Units      string `json:"units,omitempty"`
-	nowFunc    func() time.Time
-	winSize    int
 }
 
 func (p *JSONProgress) String() string {
 	var (
-		width       = p.width()
+		width       = 200
 		pbBox       string
 		numbersBox  string
 		timeLeftBox string
 	)
+
+	ws, err := term.GetWinsize(p.terminalFd)
+	if err == nil {
+		width = int(ws.Width)
+	}
+
 	if p.Current <= 0 && p.Total <= 0 {
 		return ""
 	}
@@ -99,7 +104,7 @@ func (p *JSONProgress) String() string {
 	}
 
 	if p.Current > 0 && p.Start > 0 && percentage < 50 {
-		fromStart := p.now().Sub(time.Unix(p.Start, 0))
+		fromStart := time.Now().UTC().Sub(time.Unix(p.Start, 0))
 		perEntry := fromStart / time.Duration(p.Current)
 		left := time.Duration(p.Total-p.Current) * perEntry
 		left = (left / time.Second) * time.Second
@@ -109,28 +114,6 @@ func (p *JSONProgress) String() string {
 		}
 	}
 	return pbBox + numbersBox + timeLeftBox
-}
-
-// shim for testing
-func (p *JSONProgress) now() time.Time {
-	if p.nowFunc == nil {
-		p.nowFunc = func() time.Time {
-			return time.Now().UTC()
-		}
-	}
-	return p.nowFunc()
-}
-
-// shim for testing
-func (p *JSONProgress) width() int {
-	if p.winSize != 0 {
-		return p.winSize
-	}
-	ws, err := term.GetWinsize(p.terminalFd)
-	if err == nil {
-		return int(ws.Width)
-	}
-	return 200
 }
 
 // JSONMessage defines a message struct. It describes
@@ -211,10 +194,9 @@ func (jm *JSONMessage) Display(out io.Writer, termInfo termInfo) error {
 		}
 		return jm.Error
 	}
-	var endl string
+	endl := "\r"
 	if termInfo != nil && jm.Stream == "" && jm.Progress != nil {
 		clearLine(out, termInfo)
-		endl = "\r"
 		fmt.Fprintf(out, endl)
 	} else if jm.Progress != nil && jm.Progress.String() != "" { //disable progressbar in non-terminal
 		return nil
@@ -237,7 +219,7 @@ func (jm *JSONMessage) Display(out io.Writer, termInfo termInfo) error {
 	} else if jm.Stream != "" {
 		fmt.Fprintf(out, "%s%s", jm.Stream, endl)
 	} else {
-		fmt.Fprintf(out, "%s%s\n", jm.Status, endl)
+		fmt.Fprintf(out, "%s\n%s", jm.Status, endl)
 	}
 	return nil
 }
@@ -245,7 +227,7 @@ func (jm *JSONMessage) Display(out io.Writer, termInfo termInfo) error {
 // DisplayJSONMessagesStream displays a json message stream from `in` to `out`, `isTerminal`
 // describes if `out` is a terminal. If this is the case, it will print `\n` at the end of
 // each line and move the cursor while displaying.
-func DisplayJSONMessagesStream(in io.Reader, out io.Writer, terminalFd uintptr, isTerminal bool, auxCallback func(JSONMessage)) error {
+func DisplayJSONMessagesStream(in io.Reader, out io.Writer, terminalFd uintptr, isTerminal bool, auxCallback func(*json.RawMessage)) error {
 	var (
 		dec = json.NewDecoder(in)
 		ids = make(map[string]int)
@@ -277,7 +259,7 @@ func DisplayJSONMessagesStream(in io.Reader, out io.Writer, terminalFd uintptr, 
 
 		if jm.Aux != nil {
 			if auxCallback != nil {
-				auxCallback(jm)
+				auxCallback(jm.Aux)
 			}
 			continue
 		}
@@ -330,6 +312,6 @@ type stream interface {
 }
 
 // DisplayJSONMessagesToStream prints json messages to the output stream
-func DisplayJSONMessagesToStream(in io.Reader, stream stream, auxCallback func(JSONMessage)) error {
+func DisplayJSONMessagesToStream(in io.Reader, stream stream, auxCallback func(*json.RawMessage)) error {
 	return DisplayJSONMessagesStream(in, stream, stream.FD(), stream.IsTerminal(), auxCallback)
 }
