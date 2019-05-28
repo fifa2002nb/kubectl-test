@@ -28,11 +28,10 @@ type Options struct {
 
 // 解析配置文件
 func ParseConf(c *cli.Context) (*Options, error) {
+	options := &Options{}
+	var err error
+	var conf *goini.Config
 	if c.IsSet("configure") || c.IsSet("C") {
-		options := &Options{}
-		var conf *goini.Config
-		var err error
-
 		if c.IsSet("configure") {
 			conf = goini.SetConfig(c.String("configure"))
 		} else {
@@ -76,6 +75,15 @@ func ParseConf(c *cli.Context) (*Options, error) {
 		}
 		return options, nil
 	} else {
-		return nil, errors.New(fmt.Sprintf("configure is required to run a job. See '%s start --help'.", c.App.Name))
+		options.Port = 8899
+		options.Namespace = "hadoop"
+		options.PodName = "spark-base-0"
+		options.Image = "nicolaka/netshoot:latest"
+		options.Command = "bash"
+		options.StreamIdleTimeout = 10 * time.Minute
+		options.StreamCreationTimeout = 15 * time.Second
+		options.Agentless = true
+		//return nil, errors.New(fmt.Sprintf("configure is required to run a job. See '%s start --help'.", c.App.Name))
+		return options.nil
 	}
 }
