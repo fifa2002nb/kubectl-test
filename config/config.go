@@ -1,8 +1,8 @@
 package config
 
 import (
-	"errors"
-	"fmt"
+	//"errors"
+	//"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	"github.com/widuu/goini"
@@ -84,6 +84,6 @@ func ParseConf(c *cli.Context) (*Options, error) {
 		options.StreamCreationTimeout = 15 * time.Second
 		options.Agentless = true
 		//return nil, errors.New(fmt.Sprintf("configure is required to run a job. See '%s start --help'.", c.App.Name))
-		return options.nil
+		return options, nil
 	}
 }
