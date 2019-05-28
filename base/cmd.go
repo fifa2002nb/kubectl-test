@@ -46,15 +46,15 @@ func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNames
 }
 
 func BuildAgentUri(hostIP string, port string, image, containerid, command string) (*url.URL, error) {
-	uri, err := url.Parse(fmt.Sprintf("http://%s:%d", hostIP, options.Port))
+	uri, err := url.Parse(fmt.Sprintf("http://%s:%d", hostIP, port))
 	if nil != err {
 		return nil, err
 	}
 	uri.Path = fmt.Sprintf("/v1/api/test")
 	params := url.Values{}
-	params.Add("image", options.Image)
-	params.Add("containerid", containerId)
-	bytes, _ := json.Marshal([]string{options.Command})
+	params.Add("image", image)
+	params.Add("containerid", containerid)
+	bytes, _ := json.Marshal([]string{command})
 	params.Add("command", string(bytes))
 	uri.RawQuery = params.Encode()
 	return uri, err
@@ -157,7 +157,10 @@ func Cmd(c *cli.Context) {
 	var ErrOut io.Writer = nil
 
 	fn := func() error {
-		uri := BuildAgentUri(hostIP, options.Port, options.Image, containerId, options.Command)
+		uri, err := BuildAgentUri(hostIP, options.Port, options.Image, containerId, options.Command)
+		if nil != err {
+			return err
+		}
 		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, options.Command)
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
