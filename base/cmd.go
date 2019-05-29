@@ -180,11 +180,34 @@ func Cmd(c *cli.Context) {
 	if err := t.Safe(fn); err != nil {
 		log.Fatalf("%v", err)
 	}
-	if options.Agentless && nil != agentPod {
-		log.Infof("Start deleting agent pod %s", agentPod.Name)
-		err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
-		if nil != err {
-			log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+
+	cleanUp := func() {
+		if options.Agentless && nil != agentPod {
+			log.Infof("Start deleting agent pod %s", agentPod.Name)
+			err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
+			if nil != err {
+				log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+			}
 		}
+	}
+	waitingForExit(cleanup)
+}
+
+func waitingForExit(fn func()) {
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, os.Interrupt)
+	killing := false
+	for range sc {
+		if killing {
+			log.Info("Second interrupt: exiting")
+			os.Exit(1)
+		}
+		killing = true
+		go func() {
+			log.Info("Interrupt: closing down...")
+			fun()
+			log.Info("done")
+			os.Exit(1)
+		}()
 	}
 }
