@@ -191,10 +191,10 @@ func Cmd(c *cli.Context) {
 			}
 		}
 	}
-	waitingForExit(cleanUp)
+	waitingForExitWithFn(cleanUp)
 }
 
-func waitingForExit(fn func()) {
+func waitingForExitWithFn(fn func()) {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
 	killing := false
