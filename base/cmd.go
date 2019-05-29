@@ -172,9 +172,9 @@ func Cmd(c *cli.Context) {
 		return interrupt.Chain(nil, func() {
 			if options.Agentless && "" != options.AgentPodName {
 				log.Infof("Start deleting agent pod %s", pod.Name)
-				err := clientset.CoreV1().Pods(pod.Spec.NodeName).Delete(options.AgentPodName, v1.NewDeleteOptions(0))
+				err := clientset.CoreV1().Pods(options.Namespace).Delete(options.AgentPodName, v1.NewDeleteOptions(0))
 				if err != nil {
-					log.Infof("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+					log.Infof("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", options.AgentPodName, options.Namespace)
 				}
 			}
 		}).Run(fn)
