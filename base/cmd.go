@@ -15,13 +15,11 @@ import (
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
-	"os/signal"
-	//"k8s.io/kubernetes/pkg/util/interrupt"
+	"k8s.io/kubernetes/pkg/util/interrupt"
 	"kubectl-test/config"
 	"kubectl-test/utils/podoper"
 	"kubectl-test/utils/term"
 	"net/url"
-	"os"
 )
 
 func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNamespace string, port int) (*corev1.Pod, error) {
@@ -148,7 +146,7 @@ func Cmd(c *cli.Context) {
 			log.Fatalf("%v, %v", agentPod, err)
 			os.Exit(1)
 		} else {
-			log.Infof("agentPod:%v", agentPod)
+			log.Infof("agentPodName:%v", agentPod.Name)
 		}
 	}
 
@@ -167,39 +165,20 @@ func Cmd(c *cli.Context) {
 		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, options.Command)
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
-
-	if err := t.Safe(fn); err != nil {
-		log.Fatalf("%v", err)
-	}
-
-	cleanUp := func() {
-		log.Infof("agentPod:%v", agentPod)
-		if nil != agentPod {
-			log.Infof("Start deleting agent pod %s", agentPod.Name)
-			err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
-			if nil != err {
-				log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+	withCleanUp := func() error {
+		return interrupt.Chain(nil, func() {
+			log.Infof("agentless:%v, agentPod:%v", options.AgentLess, agentPod)
+			if options.AgentLess && agentPod != nil {
+				log.Infof("Start deleting agent pod %s", pod.Name)
+				err := o.CoreClient.Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
+				if err != nil {
+					log.Infof("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+				}
 			}
-		}
+		}).Run(fn)
 	}
-	waitingForExitWithFn(cleanUp)
-}
 
-func waitingForExitWithFn(fn func()) {
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, os.Interrupt)
-	killing := false
-	for range sc {
-		if killing {
-			log.Info("Second interrupt: exiting")
-			os.Exit(1)
-		}
-		killing = true
-		go func() {
-			log.Info("Interrupt: closing down...")
-			fn()
-			log.Info("done")
-			os.Exit(1)
-		}()
+	if err := t.Safe(withCleanUp); err != nil {
+		log.Fatalf("%v", err)
 	}
 }
