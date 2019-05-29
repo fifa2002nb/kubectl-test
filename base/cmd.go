@@ -15,7 +15,7 @@ import (
 	coreclient "k8s.io/client-go/kubernetes/typed/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/kubernetes/pkg/util/interrupt"
+	//"k8s.io/kubernetes/pkg/util/interrupt"
 	"kubectl-test/config"
 	"kubectl-test/utils/podoper"
 	"kubectl-test/utils/term"
