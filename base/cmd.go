@@ -164,21 +164,27 @@ func Cmd(c *cli.Context) {
 		log.Infof("image:%v, containerid:%v, command:%v", options.Image, containerId, options.Command)
 		return (&DefaultRemoteExecutor{}).Execute("POST", uri, clientConfig, t.In, t.Out, ErrOut, t.Raw, sizeQueue)
 	}
-
-	fnWithCleanUp := func() error {
-		return interrupt.Chain(nil, func() {
-			if options.Agentless && nil != agentPod {
-				log.Infof("Start deleting agent pod %s", agentPod.Name)
-				err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
-				if nil != err {
-					log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+	/*
+		fnWithCleanUp := func() error {
+			return interrupt.Chain(nil, func() {
+				if options.Agentless && nil != agentPod {
+					log.Infof("Start deleting agent pod %s", agentPod.Name)
+					err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
+					if nil != err {
+						log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+					}
 				}
-			}
-		}).Run(fn)
-	}
-
-	if err := t.Safe(fnWithCleanUp); err != nil {
+			}).Run(fn)
+		}
+	*/
+	if err := t.Safe(fn); err != nil {
 		log.Fatalf("%v", err)
-		os.Exit(1)
+	}
+	if options.Agentless && nil != agentPod {
+		log.Infof("Start deleting agent pod %s", agentPod.Name)
+		err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
+		if nil != err {
+			log.Errorf("failed to delete agent pod[Name:%s, Namespace: %s], consider manual deletion.", agentPod.Name, agentPod.Namespace)
+		}
 	}
 }

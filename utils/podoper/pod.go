@@ -23,35 +23,39 @@ func NewPodOper(client coreclient.CoreV1Interface) *podoper {
 }
 
 func (o *podoper) BuildPodWithParameters(kind, apiversion, podName, podNamespace, nodeName, image, probePath, volumeName, mountPath string, port int) *corev1.Pod {
+	podName = fmt.Sprintf("%s-%s", podName, uuid.NewUUID())
 	agentPod := &corev1.Pod{
 		TypeMeta: v1.TypeMeta{
 			Kind:       kind,
 			APIVersion: apiversion,
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", podName, uuid.NewUUID()),
+			Name:      podName,
 			Namespace: podNamespace,
 		},
 		Spec: corev1.PodSpec{
-			NodeName: nodeName,
+			Hostname:  podName,
+			Subdomain: "test",
+			NodeName:  nodeName,
 			Containers: []corev1.Container{
 				{
 					Name:            podName,
 					Image:           image,
 					ImagePullPolicy: corev1.PullAlways,
-					LivenessProbe: &corev1.Probe{
-						Handler: corev1.Handler{
-							HTTPGet: &corev1.HTTPGetAction{
-								Path: probePath,
-								Port: intstr.FromInt(port),
+					/*
+						LivenessProbe: &corev1.Probe{
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: probePath,
+									Port: intstr.FromInt(port),
+								},
 							},
-						},
-						InitialDelaySeconds: 10,
-						PeriodSeconds:       10,
-						SuccessThreshold:    1,
-						TimeoutSeconds:      1,
-						FailureThreshold:    3,
-					},
+							InitialDelaySeconds: 10,
+							PeriodSeconds:       10,
+							SuccessThreshold:    1,
+							TimeoutSeconds:      1,
+							FailureThreshold:    3,
+						},*/
 					VolumeMounts: []corev1.VolumeMount{
 						{
 							Name:      volumeName,
