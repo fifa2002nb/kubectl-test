@@ -23,7 +23,8 @@ type Options struct {
 	Image     string
 	Command   string
 
-	Agentless bool
+	Agentless    bool
+	AgentPodName string
 }
 
 // 解析配置文件
