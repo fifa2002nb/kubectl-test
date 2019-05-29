@@ -170,8 +170,7 @@ func Cmd(c *cli.Context) {
 
 	withCleanUp := func() error {
 		return interrupt.Chain(nil, func() {
-			log.Infof("agentless:%v, agentPodName:%v", options.Agentless, options.AgentPodName)
-			if options.Agentless && agentPod != nil {
+			if options.Agentless && "" != options.AgentPodName {
 				log.Infof("Start deleting agent pod %s", pod.Name)
 				err := clientset.CoreV1().Pods(pod.Spec.NodeName).Delete(options.AgentPodName, v1.NewDeleteOptions(0))
 				if err != nil {
