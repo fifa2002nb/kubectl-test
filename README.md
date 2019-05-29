@@ -1,5 +1,5 @@
 # kubectl-test
-实现的一个kubectl插件，用于目标pod的namespaces(IPC, PID, NETWORK, USERNS)attach。
+实现的一个kubectl插件，用于目标pod的namespaces（IPC, PID, NETWORK, USERNS）的非侵入式attach。
 
 # 原理
 1. 本地执行插件kubectl test cmd --configure /etc/conf.ini；
