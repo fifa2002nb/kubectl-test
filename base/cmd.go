@@ -147,6 +147,8 @@ func Cmd(c *cli.Context) {
 		if nil != err {
 			log.Fatalf("%v, %v", agentPod, err)
 			os.Exit(1)
+		} else {
+			log.Infof("agentPod:%v", agentPod)
 		}
 	}
 
@@ -171,7 +173,7 @@ func Cmd(c *cli.Context) {
 	}
 
 	cleanUp := func() {
-		log.Infof("Start to cleanup pods..")
+		log.Infof("agentPod:%v", agentPod)
 		if nil != agentPod {
 			log.Infof("Start deleting agent pod %s", agentPod.Name)
 			err := clientset.CoreV1().Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
