@@ -20,6 +20,7 @@ import (
 	"kubectl-test/utils/podoper"
 	"kubectl-test/utils/term"
 	"net/url"
+	"os"
 )
 
 func LaunchAgentPod(client coreclient.CoreV1Interface, nodename string, podNamespace string, port int) (*corev1.Pod, error) {
@@ -167,8 +168,8 @@ func Cmd(c *cli.Context) {
 	}
 	withCleanUp := func() error {
 		return interrupt.Chain(nil, func() {
-			log.Infof("agentless:%v, agentPod:%v", options.AgentLess, agentPod)
-			if options.AgentLess && agentPod != nil {
+			log.Infof("agentless:%v, agentPod:%v", options.Agentless, agentPod)
+			if options.Agentless && agentPod != nil {
 				log.Infof("Start deleting agent pod %s", pod.Name)
 				err := o.CoreClient.Pods(agentPod.Namespace).Delete(agentPod.Name, v1.NewDeleteOptions(0))
 				if err != nil {
