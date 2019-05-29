@@ -191,7 +191,7 @@ func Cmd(c *cli.Context) {
 			}
 		}
 	}
-	waitingForExit(cleanup)
+	waitingForExit(cleanUp)
 }
 
 func waitingForExit(fn func()) {
