@@ -205,7 +205,7 @@ func waitingForExit(fn func()) {
 		killing = true
 		go func() {
 			log.Info("Interrupt: closing down...")
-			fun()
+			fn()
 			log.Info("done")
 			os.Exit(1)
 		}()
